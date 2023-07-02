@@ -1,0 +1,203 @@
+REPORT  Z_CRUD_OPERATIONS.
+
+
+TABLES: ZEMP_TABLE. "Employee Table
+DATA: lt_itab   TYPE TABLE OF ZEMP_TABLE,  
+      lwa_emp   TYPE ZEMP_TABLE, 
+      lt_itab1  TYPE TABLE OF ZEMP_ADDRESS, 
+      lwa_emp1  TYPE ZEMP_ADDRESS, 
+      lt_itab2  TYPE TABLE OF ZEMP_SALLARY,  
+      lwa_emp2  TYPE ZEMP_SALLARY. 
+
+
+PARAMETER: p_empid TYPE char8.
+
+SELECTION-SCREEN BEGIN OF BLOCK blk1 WITH FRAME TITLE text-101.
+PARAMETERS:p_rad1 RADIOBUTTON GROUP rg1 USER-COMMAND flag DEFAULT 'X',
+           p_rad2 RADIOBUTTON GROUP rg1,
+           p_rad3 RADIOBUTTON GROUP rg1,
+           p_rad4 RADIOBUTTON GROUP rg1.
+SELECTION-SCREEN END OF BLOCK blk1.
+
+PARAMETERS:
+  p_fname TYPE char20 MODIF ID pa1, "parameter for first name
+  p_lname TYPE char20 MODIF ID pa2, "parameter for last name
+  p_city  TYPE char20 MODIF ID pa3. "parameter for city name
+
+AT SELECTION-SCREEN OUTPUT.
+  LOOP AT SCREEN.
+    CASE screen-group1. 
+      WHEN 'PA1'.
+        IF p_rad1 = 'X'.
+          screen-active = '0'.
+        ENDIF.
+        IF p_rad2 = 'X'.
+          screen-active = '1'.
+        ENDIF.
+        IF p_rad3 = 'X'.
+          screen-active = '1'.
+        ENDIF.
+*
+        IF p_rad4 = 'X'.
+          screen-active = '0'.
+        ENDIF.
+        MODIFY SCREEN.
+      WHEN 'PA2'.
+        IF p_rad1 = 'X'.
+          screen-active = '0'.
+        ENDIF.
+        IF p_rad2 = 'X'.
+          screen-active = '1'.
+        ENDIF.
+        IF p_rad3 = 'X'.
+          screen-active = '1'.
+        ENDIF.
+        IF p_rad4 = 'X'.
+          screen-active = '0'.
+        ENDIF.
+        MODIFY SCREEN.
+      WHEN 'PA3'.
+        IF p_rad1 = 'X'.
+          screen-active = '0'.
+        ENDIF.
+        IF p_rad2 = 'X'.
+          screen-active = '1'.
+        ENDIF.
+        IF p_rad3 = 'X'.
+          screen-active = '1'.
+        ENDIF.
+        IF p_rad4 = 'X'.
+          screen-active = '0'.
+        ENDIF.
+        MODIFY SCREEN.
+    ENDCASE.
+  ENDLOOP.
+
+AT SELECTION-SCREEN ON RADIOBUTTON GROUP rg1. 
+  IF p_rad3 EQ 'X'. 
+    SELECT emp_fname emp_lname
+         FROM ZEMP_TABLE
+         INTO CORRESPONDING FIELDS OF TABLE lt_itab
+       WHERE empid = p_empid.
+    IF sy-subrc = 0.
+      LOOP AT lt_itab INTO lwa_emp.
+        p_fname = lwa_emp-emp_fname.
+        p_lname = lwa_emp-emp_lname.
+      ENDLOOP.
+    ENDIF.
+  ENDIF.
+START-OF-SELECTION.
+  IF p_rad3 EQ 'X'. 
+    SELECT *
+         FROM ZEMP_TABLE
+         INTO TABLE lt_itab
+         WHERE empid = p_empid.
+    UPDATE ZEMP_TABLE SET emp_fname = p_fname
+        emp_lname = p_lname WHERE empid = p_empid.
+    UPDATE ZEMP_ADDRESS SET city_name = p_city WHERE empid = p_empid.
+    IF sy-subrc = 0.
+      MESSAGE 'Employee Record Updated' TYPE 'I'.
+    ELSEIF sy-subrc <> 0 .
+      MESSAGE 'Wrong Employee ID3' TYPE 'E'.
+      EXIT.
+    ENDIF.
+    EXIT.
+  ENDIF.
+
+  IF p_rad1 EQ 'X'. 
+    SELECT *
+      FROM ZEMP_TABLE
+      INTO TABLE lt_itab
+      WHERE empid = p_empid.
+    IF sy-subrc = 0 .
+      LOOP AT lt_itab INTO lwa_emp.
+        FORMAT COLOR 1 INTENSIFIED ON. 
+        WRITE: /3 'Employee Id',
+                20 'First Name',
+                35 'Last Name',
+                70  'Date Of Birth',
+                90  'Gender',
+                110  'Marital Status',
+                130  'Created By',
+                150  'Creation Date'.
+        ULINE. " FOR UNDERLINE
+        FORMAT COLOR 2 INTENSIFIED ON. 
+        WRITE:/3 lwa_emp-empid, 20 lwa_emp-emp_fname,35
+        lwa_emp-emp_lname,70 lwa_emp-dob,90 lwa_emp-gender,110
+        lwa_emp-material,
+        130 lwa_emp-created_by,150 lwa_emp-created_at.
+      ENDLOOP.
+      ULINE.
+      SELECT *
+     FROM ZEMP_ADDRESS
+     INTO TABLE lt_itab1
+     WHERE empid = p_empid.
+      LOOP AT lt_itab1 INTO lwa_emp1.
+        FORMAT COLOR 1 INTENSIFIED ON. 
+        WRITE: /3 'Employee Id',
+                20 'Flat No.',
+                35 'Street Name',
+                70  'City Name',
+                90  'State',
+                110  'Pincode'.
+        ULINE. " FOR UNDERLINE
+        FORMAT COLOR 2 INTENSIFIED ON. "adding dark color to fields
+        WRITE:/3 lwa_emp1-empid, 20 lwa_emp1-flat_no, 35
+        lwa_emp1-street_name,70 lwa_emp1-city_name,90 lwa_emp1-state,110
+lwa_emp1-pincode.
+      ENDLOOP.
+      ULINE.
+      SELECT *
+      FROM ZEMP_SALLARY
+      INTO TABLE lt_itab2
+      WHERE empid = p_empid.
+      LOOP AT lt_itab2 INTO lwa_emp2.
+        FORMAT COLOR 1 INTENSIFIED ON. 
+        WRITE: /3 'Employee Id',
+                20 'Transaction ID',
+                35 'Month',
+                70  'Date Of Salary',
+                90  'Basic Salary'.
+                
+
+        ULINE. " FOR UNDERLINE
+        FORMAT COLOR 2 INTENSIFIED ON. 
+
+        WRITE:/3 lwa_emp2-empid,20 lwa_emp2-tid,35 lwa_emp2-mon,70
+lwa_emp2-dos,90 lwa_emp2-bs.
+      ENDLOOP.
+      ULINE.
+
+    IF sy-subrc <> 0 .
+      MESSAGE 'Wrong Employee ID1' TYPE 'E'.
+      EXIT.
+    ENDIF.
+
+
+  IF p_rad2 EQ 'X'. 
+    lwa_emp-empid = p_empid.
+    lwa_emp-emp_fname = p_fname.
+    lwa_emp-emp_lname = p_lname.
+    lwa_emp1-empid = p_empid.
+    lwa_emp1-city_name = p_city.
+    INSERT ZEMP_TABLE FROM lwa_emp.
+    INSERT ZEMP_ADDRESS FROM lwa_emp1.
+    IF sy-subrc = 0.
+      MESSAGE 'Employee Record Inserted' TYPE 'I'.
+    ELSEIF sy-subrc <> 0 .
+      MESSAGE 'Wrong Employee ID2' TYPE 'E'.
+      EXIT.
+    ENDIF.
+    EXIT.
+  ENDIF.
+  IF p_rad4 EQ 'X'. 
+    DELETE FROM ZEMP_TABLE WHERE empid = p_empid.
+    IF sy-subrc = 0.
+      MESSAGE 'Employee Record Deleted' TYPE 'I'.
+    ELSEIF sy-subrc <> 0 .
+      MESSAGE 'Wrong Employee ID4' TYPE 'E'.
+      EXIT.
+    ENDIF.
+   ENDIF.
+  ENDIF.
+ ENDIF.
